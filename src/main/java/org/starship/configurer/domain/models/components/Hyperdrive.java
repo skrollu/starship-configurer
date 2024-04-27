@@ -1,5 +1,6 @@
 package org.starship.configurer.domain.models.components;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
@@ -11,7 +12,8 @@ import org.starship.configurer.domain.models.ComponentType;
 public class Hyperdrive extends Component {
 
     @NonNull
-    private Long maxSpeed;
+    @Builder.Default
+    private Long maxSpeed = 1L; // in Km/h
 
     @Override
     public ComponentType getComponentType() {

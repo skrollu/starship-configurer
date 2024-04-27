@@ -9,14 +9,13 @@ import org.starship.configurer.domain.models.ComponentType;
 
 @Data
 @SuperBuilder
-public class Engine extends Component {
-
+public class Reactor extends Component {
     @NonNull
     @Builder.Default
     private Long thrustPower = 1L; // Newtons in N
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.ENGINE;
+        return ComponentType.REACTOR;
     }
 }

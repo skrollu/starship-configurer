@@ -1,6 +1,5 @@
 package org.starship.configurer.domain.models.components;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
@@ -9,14 +8,13 @@ import org.starship.configurer.domain.models.ComponentType;
 
 @Data
 @SuperBuilder
-public class Engine extends Component {
+public class Shield extends Component {
 
     @NonNull
-    @Builder.Default
-    private Long thrustPower = 1L; // Newtons in N
+    private ShieldPosition position;
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.ENGINE;
+        return ComponentType.SHIELD;
     }
 }

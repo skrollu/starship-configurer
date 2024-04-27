@@ -9,14 +9,18 @@ import org.starship.configurer.domain.models.ComponentType;
 
 @Data
 @SuperBuilder
-public class Engine extends Component {
-
+public class Communication extends Component {
     @NonNull
     @Builder.Default
-    private Long thrustPower = 1L; // Newtons in N
+    private Long range = 1L; // in km
+    @NonNull
+    @Builder.Default
+    private Long frequencyBandWidth = 1000L; // in Hertz (Hz)
+    @Builder.Default
+    private int channels = 10;
 
     @Override
     public ComponentType getComponentType() {
-        return ComponentType.ENGINE;
+        return ComponentType.COMMUNICATION;
     }
 }
