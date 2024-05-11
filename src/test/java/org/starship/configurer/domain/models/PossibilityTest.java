@@ -7,52 +7,53 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class PossibilityTest {
 
     @Test
-    void isCompatible_withADifferentComponentType_givesFalse(){
+    void isCompatibleWith_withADifferentComponentType_givesFalse(){
         Possibility instance = Possibility.builder()
                 .componentType(ComponentType.ENGINE)
                 .size(Size.ONE)
                 .build();
-        boolean result = instance.isCompatible(ComponentType.HYPERDRIVE, Size.ONE);
+        boolean result = instance.isCompatibleWith(ComponentType.HYPERDRIVE, Size.ONE, 1);
         assertThat(result).isFalse();
     }
 
     @Test
-    void isCompatible_withTheSameComponentTypesAndSize_givesTrue(){
+    void isCompatibleWith_withTheExactSameComponent_givesTrue(){
         Possibility instance = Possibility.builder()
                 .componentType(ComponentType.ENGINE)
                 .size(Size.ONE)
+                .number(1)
                 .build();
-        boolean result = instance.isCompatible(ComponentType.ENGINE, Size.ONE);
+        boolean result = instance.isCompatibleWith(ComponentType.ENGINE, Size.ONE, 1);
         assertThat(result).isTrue();
     }
 
     @Test
-    void isCompatible_withAGreaterSize_givesFalse(){
+    void isCompatibleWith_withAGreaterSize_givesFalse(){
         Possibility instance = Possibility.builder()
                 .componentType(ComponentType.ENGINE)
                 .size(Size.ONE)
                 .build();
-        boolean result = instance.isCompatible(ComponentType.ENGINE, Size.THREE);
+        boolean result = instance.isCompatibleWith(ComponentType.ENGINE, Size.THREE, 1);
         assertThat(result).isFalse();
     }
 
     @Test
-    void isCompatible_withASmallerSize_givesTrue(){
+    void isCompatibleWith_withASmallerSize_givesTrue(){
         Possibility instance = Possibility.builder()
                 .componentType(ComponentType.ENGINE)
                 .size(Size.THREE)
                 .build();
-        boolean result = instance.isCompatible(ComponentType.ENGINE, Size.ONE);
+        boolean result = instance.isCompatibleWith(ComponentType.ENGINE, Size.ONE, 1);
         assertThat(result).isTrue();
     }
 
     @Test
-    void isCompatible_withTheSameSize_givesTrue(){
+    void isCompatibleWith_withTheSameSize_givesTrue(){
         Possibility instance = Possibility.builder()
                 .componentType(ComponentType.ENGINE)
                 .size(Size.THREE)
                 .build();
-        boolean result = instance.isCompatible(ComponentType.ENGINE, Size.THREE);
+        boolean result = instance.isCompatibleWith(ComponentType.ENGINE, Size.THREE, 1);
         assertThat(result).isTrue();
     }
 }

@@ -9,7 +9,10 @@ import org.starship.configurer.domain.models.Component;
 import org.starship.configurer.domain.models.ComponentType;
 import org.starship.configurer.domain.models.Possibility;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @JBossLog
@@ -39,7 +42,7 @@ public class Chassis extends Component {
         }
         // handle same componentType
         // if any greater Possibility configured with greater number, don't add the given possibility
-        if (this.anyGreaterSizeWithGreaterOrEqualsNumberPossibility(possibility))
+        if (this.anyGreaterOrEqualSizeWithGreaterOrEqualsNumberPossibility(possibility))
             return;
         this.removeSmallerOrEqualSizeWithSmallerNumberPossibility(possibility);
         this.possibilities.add(possibility);
@@ -49,14 +52,12 @@ public class Chassis extends Component {
      * @param possibility
      * @return true if there is any greater possibility than the given one
      */
-    boolean anyGreaterSizeWithGreaterOrEqualsNumberPossibility(final @NonNull Possibility possibility) {
+    boolean anyGreaterOrEqualSizeWithGreaterOrEqualsNumberPossibility(final @NonNull Possibility possibility) {
         List<Possibility> sameComponentPossibilities = this.getSameComponentTypePossibilities(possibility);
         if (sameComponentPossibilities.isEmpty())
             return false;
         Optional<Possibility> anyGreaterSizeWithGreaterNumber = sameComponentPossibilities.stream()
-                // get all superior or equal size
-                .filter(p -> p.getSize().compare(possibility.getSize()) == 1 || p.getSize().compare(possibility.getSize()) == 0)
-                // get only those with a strictly greater number
+                .filter(p -> p.getSize().isGreaterThanOrEqualTo(possibility.getSize()))
                 .filter(p -> p.getNumber() >= possibility.getNumber())
                 .findAny();
         log.debugv("#anyGreaterSizeWithGreaterNumberPossibility - result {0}", anyGreaterSizeWithGreaterNumber.isPresent());
@@ -75,9 +76,7 @@ public class Chassis extends Component {
         if (sameComponentTypePossibilities.isEmpty())
             return;
         List<Possibility> inferiorPossibilityToRemove = sameComponentTypePossibilities.stream()
-                // get all inferior or equal size
-                .filter(p -> p.getSize().compare(possibility.getSize()) == -1 || p.getSize().compare(possibility.getSize()) == 0)
-                // get only those with a strictly greater number
+                .filter(p -> p.getSize().isSmallerThanOrEqualTo(possibility.getSize()))
                 .filter(p -> p.getNumber() < possibility.getNumber())
                 .collect(Collectors.toList());
 
@@ -95,29 +94,37 @@ public class Chassis extends Component {
      * @return 0 if no component are compatible with this chassis
      * </br> the highest number of given component allowed to set in this chassis
      */
-    public int howManyCompatibleComponentAllowed(final @NonNull Component component) {
-        List<Possibility> compatiblePossibilities = getAllCompatiblePossibility(component);
+    // FIXME remove second param
+    public int howManyCompatibleComponentAllowed(final @NonNull Component component, final int numberOfComponent) {
+        List<Possibility> compatiblePossibilities = getAllCompatiblePossibility(component, numberOfComponent);
         if (compatiblePossibilities.isEmpty()) {
             return 0;
         }
-        // get all equals and inferior compatibility
-        Comparator<Possibility> possibilityNumberComparator = Comparator
-                .comparing(Possibility::getNumber);
+
         return compatiblePossibilities.stream()
-                .filter(p -> p.getSize().compare(component.getSize()) == 1 || p.getSize().compare(component.getSize()) == 0)
-                .max(possibilityNumberComparator)
-                .get().getNumber();
+                .map(Possibility::getNumber)
+                .mapToInt(n -> n)
+                .max()
+                .orElse(0);
     }
 
     /**
-     * @return all possibility compatible with the given component
+     * @param component         the component to evaluate the compatibility
+     * @param numberOfComponent the number of component to evaluate the compatibility
+     * @return all possibility compatible with the given params
      */
-    public List<Possibility> getAllCompatiblePossibility(final @NonNull Component component) {
+    public List<Possibility> getAllCompatiblePossibility(final @NonNull Component component, final int numberOfComponent) {
+        Possibility componentPossibility = Possibility.builder()
+                .componentType(component.getComponentType())
+                .size(component.getSize())
+                .number(numberOfComponent)
+                .build();
+
         List<Possibility> result = this.possibilities.stream()
-                .filter(p -> p.isCompatible(component.getComponentType(), component.getSize()))
+                .filter(p -> p.isCompatibleWith(componentPossibility))
                 .collect(Collectors.toList());
         if (result.isEmpty())
-            log.warnv("This chassis is not compatible with the given component {0}", component);
+            log.warnv("This chassis is not compatible with the given component {0} and number {1}", component, numberOfComponent);
         return result;
     }
 }

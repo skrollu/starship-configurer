@@ -122,7 +122,7 @@ public class ChassisTest {
     }
 
     @Test
-    void anyGreaterSizeWithGreaterOrEqualsNumberPossibility_withGreaterPossibility_givesTrue() {
+    void anyGreaterOrEqualSizeWithGreaterOrEqualsNumberPossibility_withGreaterPossibility_givesTrue() {
         Chassis instance = Chassis.builder()
                 .name("Chassis")
                 .build();
@@ -138,14 +138,14 @@ public class ChassisTest {
                 .build();
         instance.getPossibilities().add(pos);
 
-        boolean result = instance.anyGreaterSizeWithGreaterOrEqualsNumberPossibility(toAdd);
+        boolean result = instance.anyGreaterOrEqualSizeWithGreaterOrEqualsNumberPossibility(toAdd);
 
         assertThat(result).isTrue();
     }
 
 
     @Test
-    void anyGreaterSizeWithGreaterOrEqualsNumberPossibility_givenSmallerSizeAndSameNumber_givesTrue() {
+    void anyGreaterOrEqualSizeWithGreaterOrEqualsNumberPossibility_givenSmallerSizeAndSameNumber_givesTrue() {
         Chassis instance = Chassis.builder()
                 .name("Chassis")
                 .build();
@@ -161,13 +161,13 @@ public class ChassisTest {
                 .build();
         instance.getPossibilities().add(pos);
 
-        boolean result = instance.anyGreaterSizeWithGreaterOrEqualsNumberPossibility(toAdd);
+        boolean result = instance.anyGreaterOrEqualSizeWithGreaterOrEqualsNumberPossibility(toAdd);
 
         assertThat(result).isTrue();
     }
 
     @Test
-    void anyGreaterSizeWithGreaterOrEqualsNumberPossibility_givenSmallerSizeAndNumber_givesFalse() {
+    void anyGreaterOrEqualSizeWithGreaterOrEqualsNumberPossibility_givenSmallerSizeAndNumber_givesFalse() {
         Chassis instance = Chassis.builder()
                 .name("Chassis")
                 .build();
@@ -183,13 +183,13 @@ public class ChassisTest {
                 .build();
         instance.getPossibilities().add(pos);
 
-        boolean result = instance.anyGreaterSizeWithGreaterOrEqualsNumberPossibility(toAdd);
+        boolean result = instance.anyGreaterOrEqualSizeWithGreaterOrEqualsNumberPossibility(toAdd);
 
         assertThat(result).isFalse();
     }
 
     @Test
-    void anyGreaterSizeWithGreaterOrEqualsNumberPossibility_givenSamePossibility_givesTrue() {
+    void anyGreaterOrEqualSizeWithGreaterOrEqualsNumberPossibility_givenSamePossibility_givesTrue() {
         Chassis instance = Chassis.builder()
                 .name("Chassis")
                 .build();
@@ -205,7 +205,7 @@ public class ChassisTest {
                 .build();
         instance.getPossibilities().add(pos);
 
-        boolean result = instance.anyGreaterSizeWithGreaterOrEqualsNumberPossibility(toAdd);
+        boolean result = instance.anyGreaterOrEqualSizeWithGreaterOrEqualsNumberPossibility(toAdd);
 
         assertThat(result).isTrue();
     }
@@ -302,7 +302,7 @@ public class ChassisTest {
         int result = instance.howManyCompatibleComponentAllowed(Engine.builder()
                 .name("Engine")
                 .size(Size.ONE)
-                .build());
+                .build(), 1);
 
         assertThat(result).isEqualTo(3);
     }
@@ -328,7 +328,7 @@ public class ChassisTest {
         int result = instance.howManyCompatibleComponentAllowed(Engine.builder()
                 .name("Engine")
                 .size(Size.THREE)
-                .build());
+                .build(), 1);
 
         assertThat(result).isZero();
     }
@@ -354,7 +354,7 @@ public class ChassisTest {
         int result = instance.howManyCompatibleComponentAllowed(Hyperdrive.builder()
                 .name("Hyperdrive")
                 .size(Size.THREE)
-                .build());
+                .build(), 1);
 
         assertThat(result).isZero();
     }
@@ -369,14 +369,19 @@ public class ChassisTest {
                 .size(Size.THREE)
                 .number(1)
                 .build();
+        Possibility pos1 = Possibility.builder()
+                .componentType(ComponentType.ENGINE)
+                .size(Size.TWO)
+                .number(2)
+                .build();
         instance.getPossibilities().add(pos);
+        instance.getPossibilities().add(pos1);
 
         List<Possibility> result = instance.getAllCompatiblePossibility(Engine.builder()
                 .name("Engine")
-                .build());
+                .build(), 1);
 
-        assertThat(result.size()).isOne();
-        assertThat(result.get(0).getComponentType()).isEqualTo(ComponentType.ENGINE);
+        assertThat(result.size()).isEqualTo(2);
     }
 
     @Test
@@ -393,7 +398,7 @@ public class ChassisTest {
 
         List<Possibility> result = instance.getAllCompatiblePossibility(Engine.builder()
                 .name("Engine")
-                .build());
+                .build(), 1);
 
         assertThat(result.size()).isZero();
     }

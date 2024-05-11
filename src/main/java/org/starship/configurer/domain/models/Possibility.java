@@ -16,22 +16,59 @@ public class Possibility {
     @NonNull
     private Size size;
 
-    public boolean isCompatible(Possibility with) {
-        return this.isCompatible(with.getComponentType(), with.size);
+    /**
+     * @param with
+     * @return true if the given componentType is equal to the current possibility
+     * and the given size is =< to the current possibility
+     * and number =< too
+     */
+    public boolean isCompatibleWith(final @NonNull Possibility with) {
+        return this.isCompatibleWith(with.getComponentType(), with.getSize(), with.getNumber());
     }
 
     /**
      * @param componentType
      * @param size
+     * @param number
      * @return true if the given componentType is equal to the current possibility
      * and the given size is =< to the current possibility
+     * and number =< too
      */
-    public boolean isCompatible(ComponentType componentType, Size size) {
+     boolean isCompatibleWith(final @NonNull ComponentType componentType,
+                                 final @NonNull Size size,
+                                 final int number) {
         if (!this.componentType.equals(componentType))
             return false;
-        if (this.size.compare(size) == -1)
+        if (!this.size.isGreaterThanOrEqualTo(size))
+            return false;
+        if (this.number < number)
             return false;
         return true;
+    }
+
+
+    public boolean hasGreaterSizeThan(final @NonNull Possibility possibility) {
+        if (this.size.isGreaterThan(possibility.getSize()))
+            return true;
+        return false;
+    }
+
+    public boolean hasSmallerSizeThan(final @NonNull Possibility possibility) {
+        if (this.size.isSmallerThan(possibility.getSize()))
+            return true;
+        return false;
+    }
+
+    public boolean hasGreaterNumberThan(final @NonNull Possibility possibility) {
+        if (this.number > possibility.getNumber())
+            return true;
+        return false;
+    }
+
+    public boolean hasSmallerNumberThan(final @NonNull Possibility possibility) {
+        if (this.number < possibility.getNumber())
+            return true;
+        return false;
     }
 
     /**

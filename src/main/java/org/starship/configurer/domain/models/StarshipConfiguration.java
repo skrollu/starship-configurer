@@ -4,13 +4,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.extern.jbosslog.JBossLog;
+import org.apache.commons.collections4.ListUtils;
 import org.starship.configurer.domain.models.components.Chassis;
 import org.starship.configurer.domain.models.exceptions.DifferentComponentTypeException;
 import org.starship.configurer.domain.models.exceptions.NotConfiguredComponentException;
 
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.starship.configurer.domain.models.ComponentType.CHASSIS;
 
 @Builder
 @Data
@@ -27,7 +35,7 @@ public class StarshipConfiguration {
     @NonNull
     @Builder.Default
     // TODO work on Component hashcode
-    private Set<Component> components = new HashSet<>();
+    private Map<ComponentType, List<Component>> confifuration = new HashMap<>();
     @NonNull
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -36,39 +44,44 @@ public class StarshipConfiguration {
     @Builder.Default
     private StarshipConfigurationStatus status = StarshipConfigurationStatus.DRAFT;
 
-    public void addComponent(@NonNull final Component component) {
+    public void addComponent(@NonNull final Component component, final int numberOfComponents) {
         boolean isChassisConfigured = isChassisConfigured();
         boolean isComponentAChassis = component instanceof Chassis;
 
         // handle chassis
         if (!isChassisConfigured && !isComponentAChassis) {
-            log.warnv("Chassis must be configured first.");
-            return;
-        } else if (isChassisConfigured && isComponentAChassis) {
+            throw new IllegalStateException(String.format("Chassis must be configured first"));
+        } else if (isChassisConfigured && isComponentAChassis) { // TODO manage numberOfComponents here
             this.replaceChassis((Chassis) component);
             return;
         } else if (!isChassisConfigured && isComponentAChassis) {
-            components.add(component);
+            List<Component> chassis = new ArrayList<>();
+            chassis.add(component);
+            confifuration.put(CHASSIS, chassis);
             return;
         }
 
         // handle other components
         int allowed = this.howManyCompatibleComponentAllowed(component);
-        Set<Component> sameComponentConfigured = this.getSameComponents(component);
-        // TODO manage add more than one component
-        if ((sameComponentConfigured.size() + 1) > allowed) {
-            log.warnv("There are already to many {0}", component.getComponentType());
-            return;
+        List<Component> sameComponentConfigured = this.getSameComponentTypeConfigured(component);
+        if ((sameComponentConfigured.size() + numberOfComponents) > allowed) {
+            throw new IllegalStateException(String.format("Cannot add {0} components, too many {1} configured", numberOfComponents, component.getComponentType()));
         }
-        components.add(component);
+        List<Component> components = new ArrayList<Component>();
+        components.addAll(confifuration.get(component.getComponentType()));
+        for (int i = 0; i < numberOfComponents; i++) {
+            components.add(component);
+        }
+        confifuration.put(component.getComponentType(), components);
     }
 
     /**
      * @return true if a CHASSIS is in components
      */
     private boolean isChassisConfigured() {
-        return this.components.stream()
-                .anyMatch(c -> c.isChassis());
+        return this.confifuration.entrySet().stream()
+                .filter(e -> e.getKey().equals(CHASSIS))
+                .anyMatch(e -> e.getValue().size() > 0);
     }
 
     /**
@@ -81,28 +94,35 @@ public class StarshipConfiguration {
         Chassis chassis = this.getChassis();
         if (Objects.isNull(chassis))
             return 0;
-        return chassis.howManyCompatibleComponentAllowed(component);
+        return chassis.howManyCompatibleComponentAllowed(component, 1);
     }
 
     /**
      * @return Chassis if configured else null
      */
     public Chassis getChassis() {
-        Optional<Chassis> result = this.getComponents().stream()
-                .filter(c -> c.isChassis())
-                .map(Chassis.class::cast)
+        Optional<List<Component>> chassis = this.getConfifuration().entrySet().stream()
+                .filter(e -> e.getKey().equals(CHASSIS))
+                .map(Map.Entry::getValue)
                 .findFirst();
-        if (!result.isPresent()) {
+        if (!chassis.isPresent() || chassis.get().isEmpty()) {
             log.infov("There is no chassis configured.");
             return null;
         }
-        return result.get();
+
+        if (chassis.get().size() > 1)
+            throw new IllegalStateException(String.format("Only one chassis can be configured - {0}", chassis.get()));
+        return (Chassis) chassis.get().get(0);
     }
 
-    private Set<Component> getSameComponents(Component component) {
-        return this.components.stream()
-                .filter(c -> c.getComponentType().equals(component.getComponentType()))
-                .collect(Collectors.toSet());
+    private List<Component> getSameComponentTypeConfigured(Component component) {
+        return this.confifuration
+                .entrySet()
+                .stream()
+                .filter(e -> e.getKey().equals(component.getComponentType()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(new ArrayList<>());
     }
 
     private void replaceChassis(final @NonNull Chassis chassis) {
@@ -115,8 +135,9 @@ public class StarshipConfiguration {
                     "#replaceComponent - Cannot replace components of different types - toRemove {0} with {1}",
                     toRemove.getComponentType(), with.getComponentType()));
         }
+
         this.removeComponent(toRemove);
-        this.getComponents().add(with);
+        this.addComponent(with, 1);
         log.debugv("#replaceComponent - Replaced {0}  with {1}", toRemove, with);
     }
 
@@ -126,13 +147,24 @@ public class StarshipConfiguration {
      * @param toRemove The component to remove
      */
     public void removeComponent(final @NonNull Component toRemove) {
-        if (!this.components.contains(toRemove)) {
+        if (!this.confifuration.containsKey(toRemove.getComponentType())) {
+            log.debugv("#removeComponent - Configuration key {0} not found", toRemove.getComponentType());
+            return;
+        }
+        List<Component> components = Optional.ofNullable(this.confifuration.get(toRemove.getComponentType()))
+                .orElse(new ArrayList<>());
+        List<Component> mutableComponents = new ArrayList<>();
+        mutableComponents.addAll(components);
+        final int indexToRemove = ListUtils.indexOf(mutableComponents, c -> c.equals(toRemove));
+
+        if (indexToRemove == -1) { // ListUtils.indexOf returns -1 if components is null or empty
             throw new NotConfiguredComponentException(String.format("#removeComponent - Cannot remove not configured component - toRemove {0}", toRemove));
         }
         if (toRemove instanceof Chassis)
-            this.cleanConfiguration();
+            this.clearConfiguration();
         else {
-            this.getComponents().remove(toRemove);
+            mutableComponents.remove(indexToRemove);
+            this.confifuration.replace(toRemove.getComponentType(), mutableComponents);
             log.debugv("#removeComponent - Removed {0}", toRemove);
         }
     }
@@ -140,9 +172,9 @@ public class StarshipConfiguration {
     /**
      * Remove all components from the configuration
      */
-    public void cleanConfiguration() {
-        this.components.removeAll(this.components);
-        log.debugv("#cleanConfiguration - Configuration cleaned {0}", this.getComponents());
+    public void clearConfiguration() {
+        this.confifuration.clear();
+        log.debugv("#cleanConfiguration - Configuration cleaned {0}", this.getConfifuration());
     }
 
     /**

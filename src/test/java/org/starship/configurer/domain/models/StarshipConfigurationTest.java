@@ -8,9 +8,13 @@ import org.starship.configurer.domain.models.exceptions.DifferentComponentTypeEx
 import org.starship.configurer.domain.models.exceptions.NotConfiguredComponentException;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.starship.configurer.domain.models.ComponentType.CHASSIS;
+import static org.starship.configurer.domain.models.ComponentType.HYPERDRIVE;
 
 public class StarshipConfigurationTest {
 
@@ -21,7 +25,7 @@ public class StarshipConfigurationTest {
                 .build();
 
         assertThat(instance.getName()).isEqualTo("Config");
-        assertThat(instance.getComponents()).isEmpty();
+        assertThat(instance.getConfifuration()).isEmpty();
         assertThat(instance.getCreatedAt()).isBefore(LocalDateTime.MAX);
         assertThat(instance.getStatus()).isEqualTo(StarshipConfigurationStatus.DRAFT);
     }
@@ -35,7 +39,7 @@ public class StarshipConfigurationTest {
                 .name("Config")
                 .build();
 
-        instance.addComponent(chassis);
+        instance.addComponent(chassis, 1);
 
         assertThat(instance.getChassis().getName()).isEqualTo("Chassis");
     }
@@ -52,8 +56,8 @@ public class StarshipConfigurationTest {
                 .name("Config")
                 .build();
 
-        instance.addComponent(chassis);
-        instance.addComponent(chassis2);
+        instance.addComponent(chassis, 1);
+        instance.addComponent(chassis2, 1);
 
         assertThat(instance.getChassis().getName()).isEqualTo("Chassis2");
     }
@@ -67,7 +71,7 @@ public class StarshipConfigurationTest {
      * X getChassis
      * X replaceComponent
      * X removeComponent
-     * X cleanConfiguration
+     * X clearConfiguration
      */
 
 // TODO test this when compatibility feature will be done
@@ -146,7 +150,7 @@ public class StarshipConfigurationTest {
         Chassis chassis = Chassis.builder()
                 .name("Chassis")
                 .build();
-        instance.getComponents().add(chassis);
+        instance.getConfifuration().put(CHASSIS, List.of(chassis));
 
         Chassis result = instance.getChassis();
 
@@ -171,8 +175,8 @@ public class StarshipConfigurationTest {
                 .name("Engine")
                 .thrustPower(100L)
                 .build();
-        instance.getComponents().add(chassis);
-        instance.getComponents().add(hyperdrive);
+        instance.getConfifuration().put(CHASSIS, List.of(chassis));
+        instance.getConfifuration().put(HYPERDRIVE, List.of(hyperdrive));
 
         assertThrows(DifferentComponentTypeException.class, () ->
                 instance.replaceComponent(hyperdrive, engine));
@@ -183,8 +187,14 @@ public class StarshipConfigurationTest {
         StarshipConfiguration instance = StarshipConfiguration.builder()
                 .name("Config")
                 .build();
+        Possibility possibility = Possibility.builder()
+                .number(1)
+                .size(Size.THREE)
+                .componentType(HYPERDRIVE)
+                .build();
         Chassis chassis = Chassis.builder()
                 .name("Chassis")
+                .possibilities(Set.of(possibility))
                 .build();
         Hyperdrive hyperdrive = Hyperdrive.builder()
                 .name("HD")
@@ -194,17 +204,17 @@ public class StarshipConfigurationTest {
                 .name("hyperdrive1")
                 .maxSpeed(1000L)
                 .build();
-        instance.getComponents().add(chassis);
-        instance.getComponents().add(hyperdrive);
+        instance.getConfifuration().put(CHASSIS, List.of(chassis));
+        instance.getConfifuration().put(HYPERDRIVE, List.of(hyperdrive));
 
         instance.replaceComponent(hyperdrive, hyperdrive1);
 
-        assertThat(instance.getComponents().contains(hyperdrive1)).isTrue();
-        assertThat(instance.getComponents().contains(hyperdrive)).isFalse();
+        assertThat(instance.getConfifuration().get(HYPERDRIVE).contains(hyperdrive1)).isTrue();
+        assertThat(instance.getConfifuration().get(HYPERDRIVE).contains(hyperdrive)).isFalse();
     }
 
     @Test
-    void removeComponent_removeAChassis_cleansConfiguration() {
+    void removeComponent_removeAChassis_clearsConfiguration() {
         StarshipConfiguration instance = StarshipConfiguration.builder()
                 .name("Config")
                 .build();
@@ -219,17 +229,16 @@ public class StarshipConfigurationTest {
                 .name("HD")
                 .maxSpeed(1000L)
                 .build();
-        instance.getComponents().add(chassis);
-        instance.getComponents().add(hyperdrive);
-        instance.getComponents().add(hyperdrive1);
+        instance.getConfifuration().put(CHASSIS, List.of(chassis));
+        instance.getConfifuration().put(HYPERDRIVE, List.of(hyperdrive, hyperdrive1));
 
         instance.removeComponent(chassis);
 
-        assertThat(instance.getComponents()).isEmpty();
+        assertThat(instance.getConfifuration()).isEmpty();
     }
 
     @Test
-    void removeComponent_removePresentComponent_removeIt() {
+    void removeComponent_removePresentComponent_removesIt() {
         StarshipConfiguration instance = StarshipConfiguration.builder()
                 .name("Config")
                 .build();
@@ -244,13 +253,14 @@ public class StarshipConfigurationTest {
                 .name("HD")
                 .maxSpeed(1000L)
                 .build();
-        instance.getComponents().add(chassis);
-        instance.getComponents().add(hyperdrive);
-        instance.getComponents().add(hyperdrive1);
+
+        instance.getConfifuration().put(CHASSIS, List.of(chassis));
+        instance.getConfifuration().put(HYPERDRIVE, List.of(hyperdrive, hyperdrive1));
+
         instance.removeComponent(hyperdrive1);
 
-        assertThat(instance.getComponents().size()).isEqualTo(2);
-        assertThat(instance.getComponents().contains(hyperdrive1)).isFalse();
+        assertThat(instance.getConfifuration().get(HYPERDRIVE).contains(hyperdrive)).isTrue();
+        assertThat(instance.getConfifuration().get(HYPERDRIVE).contains(hyperdrive1)).isFalse();
     }
 
     @Test
@@ -269,14 +279,15 @@ public class StarshipConfigurationTest {
                 .name("notAddedComponent")
                 .maxSpeed(1000L)
                 .build();
-        instance.getComponents().add(chassis);
-        instance.getComponents().add(hyperdrive);
+
+        instance.getConfifuration().put(CHASSIS, List.of(chassis));
+        instance.getConfifuration().put(HYPERDRIVE, List.of(hyperdrive));
 
         assertThrows(NotConfiguredComponentException.class, () -> instance.removeComponent(notAddedComponent));
     }
 
     @Test
-    void cleanConfiguration_removesAllComponents() {
+    void clearConfiguration_removesAllComponents() {
         StarshipConfiguration instance = StarshipConfiguration.builder()
                 .name("Config")
                 .build();
@@ -291,11 +302,11 @@ public class StarshipConfigurationTest {
                 .name("HD")
                 .maxSpeed(100L)
                 .build();
-        instance.getComponents().add(chassis);
-        instance.getComponents().add(hyperdrive);
-        instance.getComponents().add(hyperdrive1);
 
-        instance.cleanConfiguration();
-        assertThat(instance.getComponents()).isEmpty();
+        instance.getConfifuration().put(CHASSIS, List.of(chassis));
+        instance.getConfifuration().put(HYPERDRIVE, List.of(hyperdrive, hyperdrive1));
+
+        instance.clearConfiguration();
+        assertThat(instance.getConfifuration()).isEmpty();
     }
 }
