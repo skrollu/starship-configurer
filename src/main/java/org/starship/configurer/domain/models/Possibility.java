@@ -46,31 +46,6 @@ public class Possibility {
         return true;
     }
 
-
-    public boolean hasGreaterSizeThan(final @NonNull Possibility possibility) {
-        if (this.size.isGreaterThan(possibility.getSize()))
-            return true;
-        return false;
-    }
-
-    public boolean hasSmallerSizeThan(final @NonNull Possibility possibility) {
-        if (this.size.isSmallerThan(possibility.getSize()))
-            return true;
-        return false;
-    }
-
-    public boolean hasGreaterNumberThan(final @NonNull Possibility possibility) {
-        if (this.number > possibility.getNumber())
-            return true;
-        return false;
-    }
-
-    public boolean hasSmallerNumberThan(final @NonNull Possibility possibility) {
-        if (this.number < possibility.getNumber())
-            return true;
-        return false;
-    }
-
     /**
      * Doesn't include number to have Possibility unity
      *

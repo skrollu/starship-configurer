@@ -56,4 +56,38 @@ public class PossibilityTest {
         boolean result = instance.isCompatibleWith(ComponentType.ENGINE, Size.THREE, 1);
         assertThat(result).isTrue();
     }
+
+    @Test
+    void isCompatibleWith_withASmallerNumber_givesTrue(){
+        Possibility instance = Possibility.builder()
+                .componentType(ComponentType.ENGINE)
+                .size(Size.THREE)
+                .number(3)
+                .build();
+        boolean result = instance.isCompatibleWith(ComponentType.ENGINE, Size.THREE, 1);
+        assertThat(result).isTrue();
+    }
+
+
+    @Test
+    void isCompatibleWith_withAnEqualNumber_givesTrue(){
+        Possibility instance = Possibility.builder()
+                .componentType(ComponentType.ENGINE)
+                .size(Size.THREE)
+                .number(2)
+                .build();
+        boolean result = instance.isCompatibleWith(ComponentType.ENGINE, Size.THREE, 2);
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void isCompatibleWith_withAGreaterNumber_givesFalse(){
+        Possibility instance = Possibility.builder()
+                .componentType(ComponentType.ENGINE)
+                .size(Size.THREE)
+                .number(2)
+                .build();
+        boolean result = instance.isCompatibleWith(ComponentType.ENGINE, Size.THREE, 3);
+        assertThat(result).isFalse();
+    }
 }
