@@ -6,9 +6,9 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import org.starship.configurer.domain.models.Component;
-import org.starship.configurer.domain.models.ComponentType;
-import org.starship.configurer.domain.services.ComponentService;
+import org.starship.configurer.domain.model.Component;
+import org.starship.configurer.domain.model.ComponentType;
+import org.starship.configurer.domain.service.ComponentService;
 
 import java.util.Set;
 import java.util.UUID;
