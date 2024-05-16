@@ -1,10 +1,7 @@
 package org.starship.configurer.rest;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.starship.configurer.domain.model.Component;
 import org.starship.configurer.domain.model.ComponentType;
@@ -22,8 +19,8 @@ public class ComponentResource {
     private ComponentService service;
 
     @GET
-    public Component getComponent(UUID id, ComponentType componentType) {
-        return this.service.searchComponent(id, componentType);
+    public Component getComponent(UUID id) {
+        return this.service.searchComponent(id);
     }
 
     @GET
@@ -31,8 +28,8 @@ public class ComponentResource {
         return this.service.searchComponents(componentType);
     }
 
-    @GET
-    public Component saveComponent(Component component) {
-        return this.service.saveComponent(component);
+    @POST
+    public Component postComponent(Component component) {
+        return this.service.createComponent(component);
     }
 }

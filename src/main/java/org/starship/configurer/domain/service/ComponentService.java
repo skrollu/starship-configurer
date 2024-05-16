@@ -7,7 +7,11 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface ComponentService {
-    Component saveComponent(Component component);
-    Component searchComponent(UUID id, ComponentType componentType);
+    Component createComponent(Component component);
+    Component searchComponent(UUID id);
     Set<Component> searchComponents(ComponentType componentType);
+
+    Component updateComponent(UUID id, Component component);
+
+    void deleteComponent(UUID id);
 }

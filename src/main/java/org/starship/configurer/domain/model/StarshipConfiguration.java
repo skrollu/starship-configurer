@@ -31,7 +31,7 @@ public class StarshipConfiguration {
     private double length;
     private double width;
     private double weight;
-    private Manufacturer manufacturer;
+    private String manufacturer;
     @NonNull
     @Builder.Default
     // TODO work on Component hashcode
@@ -42,7 +42,7 @@ public class StarshipConfiguration {
     private LocalDateTime updatedAt; // TODO check value
     @NonNull
     @Builder.Default
-    private StarshipConfigurationStatus status = StarshipConfigurationStatus.DRAFT;
+    private StarshipConfigurationStatus status = StarshipConfigurationStatus.DRAFT; // TODO manage draft status
 
     /**
      * Add the given component to the configuration

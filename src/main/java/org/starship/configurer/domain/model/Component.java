@@ -11,10 +11,11 @@ import java.util.UUID;
 @SuperBuilder
 @Data
 public abstract class Component {
+    @NonNull
     private UUID id;
     @NonNull
     private String name;
-    private Manufacturer manufacturer;
+    private String manufacturer;
     private double weight;
     @NonNull
     @Builder.Default
