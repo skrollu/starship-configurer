@@ -34,8 +34,8 @@ public class StarshipConfiguration {
     private String manufacturer;
     @NonNull
     @Builder.Default
-    // TODO work on Component hashcode
-    private Map<ComponentType, List<Component>> configuration = new HashMap<>();
+    // TODO work on ComponentItem hashcode
+    private Map<ComponentType, List<ComponentItem>> configuration = new HashMap<>();
     @NonNull
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -45,40 +45,40 @@ public class StarshipConfiguration {
     private StarshipConfigurationStatus status = StarshipConfigurationStatus.DRAFT; // TODO manage draft status
 
     /**
-     * Add the given component to the configuration
+     * Add the given componentItem to the configuration
      *
-     * @param component          The component to add to the configuration
-     * @param numberOfComponents The number of the given component to add to the configuration, ignored if the component is a chassis
+     * @param componentItem          The componentItem to add to the configuration
+     * @param numberOfComponents The number of the given componentItem to add to the configuration, ignored if the componentItem is a chassis
      */
-    public void addComponent(@NonNull final Component component, final int numberOfComponents) {
+    public void addComponent(@NonNull final ComponentItem componentItem, final int numberOfComponents) {
         boolean isChassisConfigured = isChassisConfigured();
-        boolean isComponentAChassis = component instanceof Chassis;
+        boolean isComponentAChassis = componentItem instanceof Chassis;
 
         // handle chassis
         if (!isChassisConfigured && !isComponentAChassis) {
             throw new IllegalStateException(String.format("Chassis must be configured first"));
         } else if (isChassisConfigured && isComponentAChassis) { // TODO manage numberOfComponents here
-            this.replaceChassis((Chassis) component);
+            this.replaceChassis((Chassis) componentItem);
             return;
         } else if (!isChassisConfigured && isComponentAChassis) {
-            List<Component> chassis = new ArrayList<>();
-            chassis.add(component);
+            List<ComponentItem> chassis = new ArrayList<>();
+            chassis.add(componentItem);
             configuration.put(CHASSIS, chassis);
             return;
         }
 
         // handle other components
-        int allowed = this.howManyCompatibleComponentAllowed(component);
-        List<Component> configuredComponent = this.getComponentTypeConfigured(component.getComponentType());
-        if ((configuredComponent.size() + numberOfComponents) > allowed) {
-            throw new IllegalStateException(String.format("Cannot add {0} components, too many {1} configured", numberOfComponents, component.getComponentType()));
+        int allowed = this.howManyCompatibleComponentAllowed(componentItem);
+        List<ComponentItem> configuredComponentItem = this.getComponentTypeConfigured(componentItem.getComponentType());
+        if ((configuredComponentItem.size() + numberOfComponents) > allowed) {
+            throw new IllegalStateException(String.format("Cannot add {0} components, too many {1} configured", numberOfComponents, componentItem.getComponentType()));
         }
-        List<Component> result = new ArrayList<>();
-        result.addAll(configuredComponent);
+        List<ComponentItem> result = new ArrayList<>();
+        result.addAll(configuredComponentItem);
         for (int i = 0; i < numberOfComponents; i++) {
-            result.add(component);
+            result.add(componentItem);
         }
-        configuration.put(component.getComponentType(), result);
+        configuration.put(componentItem.getComponentType(), result);
     }
 
     /**
@@ -91,23 +91,23 @@ public class StarshipConfiguration {
     }
 
     /**
-     * Retrieve chassis and check how many given component are compatible
+     * Retrieve chassis and check how many given componentItem are compatible
      *
      * @return <br/> 0 if chassis isn't configured
      * <br/> how many compatible components are allowed
      */
-    public int howManyCompatibleComponentAllowed(final @NonNull Component component) {
+    public int howManyCompatibleComponentAllowed(final @NonNull ComponentItem componentItem) {
         Chassis chassis = this.getChassis();
         if (Objects.isNull(chassis))
             return 0;
-        return chassis.howManyCompatibleComponentAllowed(component, 1);
+        return chassis.howManyCompatibleComponentAllowed(componentItem, 1);
     }
 
     /**
      * @return Chassis if configured else null
      */
     public Chassis getChassis() {
-        Optional<List<Component>> chassis = this.getConfiguration().entrySet().stream()
+        Optional<List<ComponentItem>> chassis = this.getConfiguration().entrySet().stream()
                 .filter(e -> e.getKey().equals(CHASSIS))
                 .map(Map.Entry::getValue)
                 .findFirst();
@@ -125,7 +125,7 @@ public class StarshipConfiguration {
      * @param type The component type looked up for.
      * @return The components configured with the given type.
      */
-    private List<Component> getComponentTypeConfigured(ComponentType type) {
+    private List<ComponentItem> getComponentTypeConfigured(ComponentType type) {
         return ListUtils.emptyIfNull(this.configuration.get(type));
     }
 
@@ -146,7 +146,7 @@ public class StarshipConfiguration {
      * @param with     The component to configure
      * @throws DifferentComponentTypeException
      */
-    public void replaceComponent(final @NonNull Component toRemove, final @NonNull Component with) throws DifferentComponentTypeException {
+    public void replaceComponent(final @NonNull ComponentItem toRemove, final @NonNull ComponentItem with) throws DifferentComponentTypeException {
         if (!toRemove.getComponentType().equals(with.getComponentType())) {
             throw new DifferentComponentTypeException(String.format(
                     "#replaceComponent - Cannot replace components of different types - toRemove {0} with {1}",
@@ -164,25 +164,25 @@ public class StarshipConfiguration {
      *
      * @param toRemove The component to remove
      */
-    public void removeComponent(final @NonNull Component toRemove) {
+    public void removeComponent(final @NonNull ComponentItem toRemove) {
         if (!this.configuration.containsKey(toRemove.getComponentType())) {
             log.debugv("#removeComponent - Configuration key {0} not found", toRemove.getComponentType());
             return;
         }
-        List<Component> components = Optional.ofNullable(this.configuration.get(toRemove.getComponentType()))
+        List<ComponentItem> componentItems = Optional.ofNullable(this.configuration.get(toRemove.getComponentType()))
                 .orElse(new ArrayList<>());
-        List<Component> mutableComponents = new ArrayList<>();
-        mutableComponents.addAll(components);
-        final int indexToRemove = ListUtils.indexOf(mutableComponents, c -> c.equals(toRemove));
+        List<ComponentItem> mutableComponentItems = new ArrayList<>();
+        mutableComponentItems.addAll(componentItems);
+        final int indexToRemove = ListUtils.indexOf(mutableComponentItems, c -> c.equals(toRemove));
 
-        if (indexToRemove == -1) { // ListUtils.indexOf returns -1 if components is null or empty
+        if (indexToRemove == -1) { // ListUtils.indexOf returns -1 if componentItems is null or empty
             throw new NotConfiguredComponentException(String.format("#removeComponent - Cannot remove not configured component - toRemove {0}", toRemove));
         }
         if (toRemove instanceof Chassis)
             this.clearConfiguration();
         else {
-            mutableComponents.remove(indexToRemove);
-            this.configuration.replace(toRemove.getComponentType(), mutableComponents);
+            mutableComponentItems.remove(indexToRemove);
+            this.configuration.replace(toRemove.getComponentType(), mutableComponentItems);
             log.debugv("#removeComponent - Removed {0}", toRemove);
         }
     }

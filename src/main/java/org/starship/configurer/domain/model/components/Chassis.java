@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jbosslog.JBossLog;
-import org.starship.configurer.domain.model.Component;
+import org.starship.configurer.domain.model.ComponentItem;
 import org.starship.configurer.domain.model.ComponentType;
 import org.starship.configurer.domain.model.Possibility;
 
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @JBossLog
 @Data
 @SuperBuilder
-public class Chassis extends Component {
+public class Chassis extends ComponentItem {
 
     @NonNull
     @Builder.Default
@@ -91,12 +91,12 @@ public class Chassis extends Component {
     }
 
     /**
-     * @return 0 if no component are compatible with this chassis
-     * </br> the highest number of given component allowed to set in this chassis
+     * @return 0 if no componentItem are compatible with this chassis
+     * </br> the highest number of given componentItem allowed to set in this chassis
      */
     // FIXME remove second param
-    public int howManyCompatibleComponentAllowed(final @NonNull Component component, final int numberOfComponent) {
-        List<Possibility> compatiblePossibilities = getAllCompatiblePossibility(component, numberOfComponent);
+    public int howManyCompatibleComponentAllowed(final @NonNull ComponentItem componentItem, final int numberOfComponent) {
+        List<Possibility> compatiblePossibilities = getAllCompatiblePossibility(componentItem, numberOfComponent);
         if (compatiblePossibilities.isEmpty()) {
             return 0;
         }
@@ -109,14 +109,14 @@ public class Chassis extends Component {
     }
 
     /**
-     * @param component         the component to evaluate the compatibility
-     * @param numberOfComponent the number of component to evaluate the compatibility
+     * @param componentItem     the componentItem to evaluate the compatibility
+     * @param numberOfComponent the number of componentItem to evaluate the compatibility
      * @return all possibility compatible with the given params
      */
-    public List<Possibility> getAllCompatiblePossibility(final @NonNull Component component, final int numberOfComponent) {
+    public List<Possibility> getAllCompatiblePossibility(final @NonNull ComponentItem componentItem, final int numberOfComponent) {
         Possibility componentPossibility = Possibility.builder()
-                .componentType(component.getComponentType())
-                .size(component.getSize())
+                .componentType(componentItem.getComponentType())
+                .size(componentItem.getSize())
                 .number(numberOfComponent)
                 .build();
 
@@ -124,7 +124,7 @@ public class Chassis extends Component {
                 .filter(p -> p.isCompatibleWith(componentPossibility))
                 .collect(Collectors.toList());
         if (result.isEmpty())
-            log.warnv("This chassis is not compatible with the given component {0} and number {1}", component, numberOfComponent);
+            log.warnv("This chassis is not compatible with the given componentItem {0} and number {1}", componentItem, numberOfComponent);
         return result;
     }
 }

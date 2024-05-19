@@ -4,12 +4,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
-import org.starship.configurer.domain.model.Component;
+import org.starship.configurer.domain.model.ComponentItem;
 import org.starship.configurer.domain.model.ComponentType;
 
 @Data
 @SuperBuilder
-public class Engine extends Component {
+public class Engine extends ComponentItem {
 
     @NonNull
     @Builder.Default

@@ -2,7 +2,7 @@ package org.starship.configurer.connector.dynamodb.entity;
 
 public class ComponentDescriptors {
 
-    public static final String TABLE_NAME = "Component";
+    public static final String TABLE_NAME = "ComponentItem";
 
     // ==== component dynamodb model
     public static final String PFX_COMPONENT = "COMP";

@@ -4,13 +4,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
-import org.starship.configurer.domain.model.Component;
+import org.starship.configurer.domain.model.ComponentItem;
 import org.starship.configurer.domain.model.ComponentType;
 
 
 @Data
 @SuperBuilder
-public class Tank extends Component {
+public class Tank extends ComponentItem {
     @NonNull
     @Builder.Default
     private Long capacity = 1L; // Volume in m3

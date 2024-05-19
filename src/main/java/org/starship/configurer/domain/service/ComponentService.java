@@ -1,17 +1,17 @@
 package org.starship.configurer.domain.service;
 
-import org.starship.configurer.domain.model.Component;
+import org.starship.configurer.domain.model.ComponentItem;
 import org.starship.configurer.domain.model.ComponentType;
 
 import java.util.Set;
 import java.util.UUID;
 
 public interface ComponentService {
-    Component createComponent(Component component);
-    Component searchComponent(UUID id);
-    Set<Component> searchComponents(ComponentType componentType);
+    ComponentItem createComponent(ComponentItem componentItem);
+    ComponentItem searchComponent(UUID id);
+    Set<ComponentItem> searchComponents(ComponentType componentType);
 
-    Component updateComponent(UUID id, Component component);
+    ComponentItem updateComponent(UUID id, ComponentItem componentItem);
 
     void deleteComponent(UUID id);
 }

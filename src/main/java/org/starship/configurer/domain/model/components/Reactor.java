@@ -4,12 +4,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
-import org.starship.configurer.domain.model.Component;
+import org.starship.configurer.domain.model.ComponentItem;
 import org.starship.configurer.domain.model.ComponentType;
 
 @Data
 @SuperBuilder
-public class Reactor extends Component {
+public class Reactor extends ComponentItem {
     @NonNull
     @Builder.Default
     private Long thrustPower = 1L; // Newtons in N
